@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}SupplyLink{% endblock %}</title>
+  <style>
+    body { font-family: Georgia, serif; margin: 0; background: #f4f1ea; color: #222; }
+    header { background: #1f3a5f; color: #fff; padding: 12px 24px; display: flex; justify-content: space-between; }
+    header a, header button { color: #fff; background: none; border: 0; font: inherit; cursor: pointer; }
+    main { padding: 24px; }
+    .card { background: #fff; padding: 20px; border: 1px solid #ddd; max-width: 960px; }
+    .narrow { max-width: 360px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border-bottom: 1px solid #ddd; padding: 8px; text-align: left; }
+    label { display: block; margin-top: 10px; }
+    input, select { width: 100%; padding: 6px; }
+    button[type=submit], .button { margin-top: 14px; padding: 8px 14px; background: #1f3a5f; color: #fff; border: 0; text-decoration: none; display: inline-block; }
+    .error { color: #a00; }
+  </style>
+  {% include "delayed.html" %}
+</head>
+<body>
+  <header>
+    <strong>SupplyLink · Supplier Invoices</strong>
+    {% if user %}
+    <form method="post" action="/logout"><span>{{ user }}</span> · <button type="submit">Sign out</button></form>
+    {% endif %}
+  </header>
+  <main id="content">{% block content %}{% endblock %}</main>
+</body>
+</html>

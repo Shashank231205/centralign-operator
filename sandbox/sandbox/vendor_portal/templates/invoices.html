@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Invoices · SupplyLink{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Invoices received</h1>
+  <form method="get" action="/invoices">
+    <label for="vendor">Filter by supplier</label>
+    <input id="vendor" name="vendor" value="{{ vendor }}" placeholder="Supplier name">
+    <button type="submit">Filter</button>
+  </form>
+  <table aria-label="Invoices">
+    <thead><tr><th>Supplier</th><th>Invoice</th><th>Issued</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for invoice in invoices %}
+      <tr>
+        <td>{{ invoice.vendor_name }}</td>
+        <td>{{ invoice.invoice_number }}</td>
+        <td>{{ invoice.issue_date.strftime("%d %b %Y") }}</td>
+        <td>{{ invoice.status }}</td>
+        <td><a href="/invoices/{{ invoice.invoice_number }}">View {{ invoice.invoice_number }}</a></td>
+      </tr>
+    {% else %}
+      <tr><td colspan="5">No invoices match this filter.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

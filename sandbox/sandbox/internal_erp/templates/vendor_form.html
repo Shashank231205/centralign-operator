@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}New vendor · Ledgerly{% endblock %}
+{% block content %}
+<h1>New vendor</h1>
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+<form class="entry" method="post" action="/vendors">
+  <label for="name">Vendor name</label>
+  <input id="name" name="name" value="{{ values.name or '' }}">
+  <label for="contact_name">Contact name</label>
+  <input id="contact_name" name="contact_name" value="{{ values.contact_name or '' }}">
+  <label for="contact_email">Contact email</label>
+  <input id="contact_email" name="contact_email" value="{{ values.contact_email or '' }}">
+  <label for="payment_terms">Payment terms</label>
+  <select id="payment_terms" name="payment_terms">
+    <option value="">-- select --</option>
+    {% for term in payment_terms %}
+    <option value="{{ term }}" {% if values.payment_terms == term %}selected{% endif %}>{{ term }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit">{{ label("save_vendor") }}</button>
+</form>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Sign in · {{ product }}{% endblock %}
+{% block content %}
+<section class="card narrow">
+  <h1>Sign in to {{ product }}</h1>
+  {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+  <form method="post" action="/login">
+    <input type="hidden" name="next" value="{{ next }}">
+    <label for="username">Username</label>
+    <input id="username" name="username" type="text" autocomplete="username" required>
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" autocomplete="current-password" required>
+    <button type="submit">{{ label("sign_in") }}</button>
+  </form>
+</section>
+{% endblock %}

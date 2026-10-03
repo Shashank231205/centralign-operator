@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Vendors · Ledgerly{% endblock %}
+{% block content %}
+<h1>Vendors</h1>
+{% if request.query_params.get("created") %}<p class="notice" role="status">Vendor saved. ERP vendor id #{{ request.query_params.get("created") }}.</p>{% endif %}
+<table aria-label="Vendors">
+  <thead><tr><th>Id</th><th>Name</th><th>Contact</th><th>Email</th><th>Terms</th></tr></thead>
+  <tbody>
+  {% for vendor in vendors %}
+    <tr><td>{{ vendor.id }}</td><td>{{ vendor.name }}</td><td>{{ vendor.contact_name }}</td><td>{{ vendor.contact_email }}</td><td>{{ vendor.payment_terms }}</td></tr>
+  {% else %}
+    <tr><td colspan="5">No vendors.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

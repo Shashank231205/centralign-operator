@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Enter invoice · Ledgerly{% endblock %}
+{% block content %}
+<h1>Enter supplier invoice</h1>
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+<form class="entry" method="post" action="/invoices">
+  <label for="vendor_id">Vendor</label>
+  <select id="vendor_id" name="vendor_id">
+    <option value="">-- select vendor --</option>
+    {% for vendor in vendors %}
+    <option value="{{ vendor.id }}" {% if values.vendor_id == vendor.id|string %}selected{% endif %}>{{ vendor.name }}</option>
+    {% endfor %}
+  </select>
+  <label for="invoice_number">Invoice number</label>
+  <input id="invoice_number" name="invoice_number" value="{{ values.invoice_number or '' }}">
+  <label for="amount">Amount</label>
+  <input id="amount" name="amount" value="{{ values.amount or '' }}">
+  <label for="currency">Currency</label>
+  <select id="currency" name="currency">
+    {% for code in currencies %}
+    <option value="{{ code }}" {% if values.currency == code %}selected{% endif %}>{{ code }}</option>
+    {% endfor %}
+  </select>
+  <label for="due_date">Due date</label>
+  <input id="due_date" name="due_date" value="{{ values.due_date or '' }}">
+  <label for="notes">Notes</label>
+  <textarea id="notes" name="notes" rows="2">{{ values.notes or '' }}</textarea>
+  <button type="submit">{{ label("save_invoice") }}</button>
+</form>
+{% endblock %}

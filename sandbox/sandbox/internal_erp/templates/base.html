@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}Ledgerly ERP{% endblock %}</title>
+  <style>
+    body { font-family: Verdana, sans-serif; font-size: 13px; margin: 0; display: flex; min-height: 100vh; color: #1b1b1b; }
+    nav { width: 190px; background: #2d2d2d; color: #ddd; padding: 16px; }
+    nav a { color: #ddd; display: block; margin: 8px 0; text-decoration: none; }
+    nav strong { display: block; margin-bottom: 16px; color: #8fd18f; }
+    main { flex: 1; padding: 20px 28px; background: #fafafa; }
+    table { border-collapse: collapse; width: 100%; background: #fff; }
+    th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
+    th { background: #eee; }
+    form.entry { background: #fff; border: 1px solid #ccc; padding: 16px; max-width: 520px; }
+    label { display: block; margin-top: 10px; font-weight: bold; }
+    input, select, textarea { width: 100%; padding: 5px; box-sizing: border-box; }
+    button[type=submit] { margin-top: 14px; padding: 7px 16px; background: #3a7d3a; color: #fff; border: 0; }
+    .error { background: #fde8e8; border: 1px solid #e0a0a0; padding: 8px; color: #8a1f1f; }
+    .notice { background: #e8f6e8; border: 1px solid #9fd09f; padding: 8px; }
+    .tag-overdue { color: #b00; font-weight: bold; }
+  </style>
+  {% include "delayed.html" %}
+</head>
+<body>
+  <nav aria-label="Main">
+    <strong>Ledgerly ERP</strong>
+    {% if user %}
+    <a href="/invoices">Payable invoices</a>
+    <a href="/invoices/new">Enter invoice</a>
+    <a href="/vendors">Vendors</a>
+    <a href="/vendors/new">New vendor</a>
+    <form method="post" action="/logout"><button type="submit">Sign out ({{ user }})</button></form>
+    {% endif %}
+  </nav>
+  <main id="content">{% block content %}{% endblock %}</main>
+</body>
+</html>

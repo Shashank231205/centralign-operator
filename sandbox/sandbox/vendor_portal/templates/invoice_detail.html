@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{{ invoice.invoice_number }} · SupplyLink{% endblock %}
+{% block content %}
+<section class="card">
+  <p><a href="/invoices">← All invoices</a></p>
+  <h1>Invoice {{ invoice.invoice_number }}</h1>
+  <dl>
+    <dt>Supplier</dt><dd>{{ invoice.vendor_name }}</dd>
+    <dt>Issued</dt><dd>{{ invoice.issue_date.strftime("%d %b %Y") }}</dd>
+    <dt>Status</dt><dd>{{ invoice.status }}</dd>
+  </dl>
+  <p>Amount and payment terms are stated on the invoice document.</p>
+  <a class="button" href="/invoices/{{ invoice.invoice_number }}/pdf">{{ label("download_pdf") }}</a>
+</section>
+{% endblock %}
