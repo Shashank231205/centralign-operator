@@ -101,6 +101,11 @@ class AgentSettings(BaseModel):
     observation_char_budget: int = 6_000
     context_top_k: int = 3
     memory_top_k: int = 5
+    checkpoint_history_limit: int = 30
+    # Formats the verifier accepts when comparing dates across systems (first match wins).
+    date_formats: list[str] = Field(
+        default_factory=lambda: ["%Y-%m-%d", "%d/%m/%Y", "%B %d, %Y", "%d %B %Y", "%d %b %Y"]
+    )
 
 
 class BrowserSettings(BaseModel):

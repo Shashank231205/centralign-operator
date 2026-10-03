@@ -12,8 +12,9 @@ from typing import Any, Literal
 from urllib.parse import urlparse
 
 import yaml
-from app.domain.enums import RiskLevel
 from pydantic import BaseModel, Field
+
+from app.domain.enums import RiskLevel
 
 _ENV_REFERENCE = re.compile(r"\$\{([A-Z0-9_]+)\}")
 _FRONT_MATTER = re.compile(r"^---\n(?P<meta>.*?)\n---\n(?P<body>.*)$", re.DOTALL)

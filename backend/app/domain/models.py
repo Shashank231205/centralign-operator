@@ -180,7 +180,29 @@ class PendingApproval(BaseModel):
 class ApprovalResolution(BaseModel):
     decision: ApprovalDecision
     comment: str = ""
-    edited_args: dict[str, Any] | None = None
+    edited_payload: dict[str, str] | None = Field(
+        default=None, description="Field values the approver changed, e.g. {'amount': '7400.00'}"
+    )
+
+
+class ApprovalGrant(BaseModel):
+    """A human authorised writing this payload to this system. Single use.
+
+    Approvals bind to data, not to a browser element: after a pause (possibly on another
+    worker, with a fresh browser) the agent redoes the steps and the matching write passes.
+    """
+
+    approval_id: UUID
+    system: str | None
+    payload: dict[str, str]
+
+    def covers(self, system: str | None, payload: dict[str, Any]) -> bool:
+        if system != self.system:
+            return False
+        return all(
+            str(payload.get(key, "")).strip().lower() == value.strip().lower()
+            for key, value in self.payload.items()
+        )
 
 
 # --- Verification ------------------------------------------------------------------------
@@ -223,7 +245,7 @@ class RunState(BaseModel):
     history: list[StepRecord] = Field(default_factory=list)
     counters: RunCounters = Field(default_factory=RunCounters)
     pending_approval: PendingApproval | None = None
-    approved_action: Action | None = None
+    grants: list[ApprovalGrant] = Field(default_factory=list)
     pending_question: str | None = None
     human_inputs: list[str] = Field(default_factory=list)
     feedback: list[str] = Field(default_factory=list)
@@ -232,5 +254,6 @@ class RunState(BaseModel):
     replan_reason: str | None = None
     location: str | None = None
     summary: str | None = None
+    key_results: dict[str, str] = Field(default_factory=dict)
     failure_reason: str | None = None
     started_at: datetime = Field(default_factory=utcnow)
