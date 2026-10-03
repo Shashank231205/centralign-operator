@@ -1,0 +1,49 @@
+# Who the operator works for and which systems it may use.
+# ${VAR} values are resolved from the environment at load time; secrets are referenced by
+# credential name only and injected by the tools, never shown to the model.
+company:
+  name: Acme Buyer Holdings
+  description: >
+    Mid-size manufacturing company. The accounts payable (AP) team receives supplier invoices
+    on the SupplyLink portal and records them in the Ledgerly ERP for payment.
+  operator_role: AP clerk acting on behalf of the finance team
+  currency_default: USD
+
+systems:
+  vendor_portal:
+    title: SupplyLink vendor portal
+    kind: web_app
+    base_url: ${SANDBOX_PORTAL_URL}
+    credential: vendor_portal
+    access: read
+    purpose: >
+      Suppliers publish their invoices here. The list shows supplier, invoice number, issue date
+      and status. Amounts and due dates are only inside the downloadable invoice PDF.
+
+  internal_erp:
+    title: Ledgerly ERP (web UI)
+    kind: web_app
+    base_url: ${SANDBOX_ERP_URL}
+    credential: internal_erp
+    access: read_write
+    purpose: >
+      System of record for vendors and payable invoices. All data entry (new invoices,
+      new vendors) happens through this web UI.
+
+  internal_erp_api:
+    title: Ledgerly ERP read API
+    kind: http_api
+    base_url: ${SANDBOX_ERP_URL}/api
+    credential: internal_erp_api
+    auth: bearer
+    access: read
+    purpose: Read-only JSON API for lookups, duplicate checks, reports and verification.
+    endpoints:
+      - "GET /vendors?name=<exact vendor name, case-insensitive> -> {count, items: [{id, name, contact_name, contact_email, payment_terms}]}"
+      - "GET /invoices?vendor=<exact vendor name>&invoice_number=<number>&status=<unpaid|paid|overdue> -> {count, items: [{id, vendor, invoice_number, amount, currency, due_date (YYYY-MM-DD), status, overdue}]}"
+
+  workspace:
+    title: Operator workspace (local files)
+    kind: files
+    access: read_write
+    purpose: Per-run folder for downloaded documents and generated reports.

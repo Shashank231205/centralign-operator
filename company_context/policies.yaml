@@ -1,0 +1,33 @@
+# What the operator may do on its own, what needs a human, and what is never allowed.
+# Rules are evaluated by the policy engine against the exact payload an action would send
+# (form fields for browser submits, JSON body for HTTP writes).
+
+# Hosts outside this list are blocked for browser and HTTP tools. System base URLs from
+# profile.yaml are allowed automatically; list any extra hosts here.
+extra_allowed_hosts: []
+
+approval_rules:
+  - id: high_value_payable
+    description: Recording a payable above 5,000 (any currency) needs AP manager approval.
+    systems: [internal_erp]
+    min_risk: write
+    when: { field: amount, op: gt, value: 5000 }
+
+  - id: new_vendor_master
+    description: Creating a vendor master record needs approval (vendor fraud control).
+    systems: [internal_erp]
+    min_risk: write
+    when: { field: contact_email, op: exists }
+
+  - id: irreversible_actions
+    description: Any irreversible action needs explicit approval.
+    min_risk: irreversible
+
+forbidden_rules:
+  - id: no_payment_status_changes
+    description: The operator never marks invoices as paid or changes payment status.
+    when: { field: status, op: eq, value: paid }
+
+  - id: no_deletions
+    description: The operator never deletes records.
+    when: { field: _method, op: eq, value: DELETE }
