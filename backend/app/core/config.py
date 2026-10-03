@@ -109,6 +109,9 @@ class BrowserSettings(BaseModel):
     viewport_width: int = 1280
     viewport_height: int = 900
     max_snapshot_elements: int = 120
+    # Late-rendering pages: poll until the interactive element count stops changing.
+    settle_timeout_seconds: float = 6.0
+    settle_interval_ms: int = 400
 
 
 class ResilienceSettings(BaseModel):
@@ -118,6 +121,8 @@ class ResilienceSettings(BaseModel):
     breaker_failure_threshold: int = 5
     breaker_reset_seconds: float = 30.0
     host_requests_per_second: float = 5.0
+    host_burst: int = 10
+    host_rate_wait_seconds: float = 30.0
 
 
 class SystemCredential(BaseModel):
