@@ -1,0 +1,77 @@
+[project]
+name = "centralign-operator-workspace"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["backend", "sandbox"]
+
+[tool.uv.sources]
+operator-backend = { workspace = true }
+operator-sandbox = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "operator-backend",
+    "operator-sandbox",
+    "ruff>=0.8",
+    "mypy>=1.13",
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=6.0",
+    "poethepoet>=0.31",
+    "types-pyyaml>=6.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["frontend", "backend/migrations/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "SIM", "RET", "ARG", "PTH", "ASYNC", "S", "BLE", "TRY", "RUF"]
+ignore = ["TRY003", "S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S", "ARG", "PLR2004"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]
+mypy_path = ["backend", "sandbox"]
+explicit_package_bases = true
+namespace_packages = true
+
+[[tool.mypy.overrides]]
+module = ["arq.*", "fpdf.*", "pypdf.*", "docx.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+testpaths = ["backend/tests", "sandbox/tests"]
+markers = [
+    "integration: needs Postgres, Redis and the sandbox running",
+    "e2e: full agent run against the sandbox",
+]
+addopts = "-m 'not integration and not e2e'"
+
+[tool.poe.tasks]
+lint = { shell = "ruff check . && ruff format --check ." }
+format = { shell = "ruff format . && ruff check --fix ." }
+typecheck = "mypy backend/app sandbox/sandbox"
+test = "pytest"
+test-integration = "pytest -m integration"
+test-e2e = "pytest -m e2e"
+migrate = { cmd = "alembic upgrade head", cwd = "backend" }
+api = "uvicorn app.main:create_app --factory --app-dir backend --host 0.0.0.0 --port 8000"
+worker = { cmd = "arq app.workers.main.WorkerSettings", cwd = "backend" }
+sandbox-portal = "uvicorn sandbox.vendor_portal.app:create_app --factory --app-dir sandbox --port 8101"
+sandbox-erp = "uvicorn sandbox.internal_erp.app:create_app --factory --app-dir sandbox --port 8102"
+seed = "python -m sandbox.seed"
+browsers = "playwright install chromium"
