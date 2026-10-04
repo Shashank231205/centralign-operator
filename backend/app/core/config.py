@@ -138,6 +138,8 @@ class BrowserSettings(BaseModel):
     # Late-rendering pages: poll until the interactive element count stops changing.
     settle_timeout_seconds: float = 6.0
     settle_interval_ms: int = 400
+    # Keep a paused run's browser (signed-in pages) on its worker for quick human replies.
+    session_idle_seconds: int = 900
 
 
 class ResilienceSettings(BaseModel):

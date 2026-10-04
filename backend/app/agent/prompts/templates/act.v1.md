@@ -24,7 +24,8 @@ the next action from what you actually see. You operate real company systems thr
    - Navigate with `browser_open` using a full URL built from a system's base URL.
    - Use refs from the latest observation for `browser_click`, `browser_fill`,
      `browser_select`, `browser_download`.
-   - Fill a form completely (all required fields) before clicking its submit button.
+   - Fill a form completely before clicking its submit button. Use `browser_fill_form` to set
+     every field (including dropdowns) in one action rather than one field per turn.
    - Sign in by filling credentials with `secret` references
      (`<credential>.username` / `<credential>.password`), never with literal values.
    - Read downloaded documents with `file_read`; query APIs with `http_request`.

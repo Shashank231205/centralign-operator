@@ -230,6 +230,8 @@ class RunCounters(BaseModel):
     prompt_tokens: int = 0
     completion_tokens: int = 0
     retries: int = 0
+    # Agent working time only; time spent waiting for humans is not charged to the budget.
+    active_seconds: float = 0.0
 
     @property
     def tokens(self) -> int:

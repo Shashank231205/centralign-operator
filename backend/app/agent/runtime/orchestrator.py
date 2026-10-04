@@ -10,6 +10,7 @@ knowledge arrives through company context, the plan and observations.
 
 import json
 import logging
+import time
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from uuid import uuid4
@@ -86,7 +87,9 @@ class RunSession:
                     await self._transition(RunStatus.CANCELLED, "Cancelled on request")
                     break
                 self._rt.budget.check(self.state)
+                started = time.monotonic()
                 await self._handlers[self.state.status]()
+                self.state.counters.active_seconds += time.monotonic() - started
                 await self._recorder.checkpoint(self.state)
         except (BudgetExceededError, LLMResponseInvalidError) as exc:
             detail = exc.details.get("error") or exc.details.get("budget")

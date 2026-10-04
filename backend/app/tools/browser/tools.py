@@ -216,6 +216,47 @@ class BrowserSelect(BrowserTool[SelectArgs]):
         return await observe(session, ctx, "select", screenshot=False)
 
 
+class FieldValue(BaseModel):
+    ref: str = Field(description="Field ref from the latest observation")
+    value: str | None = Field(default=None, description="Text, or visible option text for a select")
+    secret: str | None = Field(default=None, description="Credential reference instead of a value")
+
+    @model_validator(mode="after")
+    def _exactly_one(self) -> "FieldValue":
+        if (self.value is None) == (self.secret is None):
+            raise ValueError("Each field needs exactly one of 'value' or 'secret'")
+        return self
+
+
+class FillFormArgs(BaseModel):
+    fields: list[FieldValue] = Field(min_length=1, description="Every field to set, in order")
+
+
+class BrowserFillForm(BrowserTool[FillFormArgs]):
+    name: ClassVar[str] = "browser_fill_form"
+    description: ClassVar[str] = (
+        "Fill several fields in one action (text inputs, textareas and dropdowns by visible "
+        "option text). Prefer this over one-field-at-a-time filling. Does not submit."
+    )
+    args_model = FillFormArgs
+
+    async def act(self, args: FillFormArgs, ctx: ToolContext) -> Observation:
+        session = await _session_for(ctx)
+        snapshot = session.last_snapshot
+        for field in args.fields:
+            locator = await session.require(field.ref)
+            text = ctx.credentials.resolve(field.secret) if field.secret else (field.value or "")
+            element = snapshot.element(field.ref) if snapshot else None
+            if element is not None and element.tag == "select":
+                try:
+                    await locator.select_option(label=text)
+                except PlaywrightTimeoutError as exc:
+                    raise ToolInputError(f"Option {text!r} not found in {field.ref}") from exc
+            else:
+                await locator.fill(text)
+        return await observe(session, ctx, "fill_form", screenshot=False)
+
+
 class BrowserDownload(BrowserTool[RefArgs]):
     name: ClassVar[str] = "browser_download"
     description: ClassVar[str] = (
@@ -269,6 +310,7 @@ def browser_tools() -> list[Tool[Any]]:
         BrowserOpen(),
         BrowserClick(),
         BrowserFill(),
+        BrowserFillForm(),
         BrowserSelect(),
         BrowserDownload(),
         BrowserSnapshot(),

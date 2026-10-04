@@ -1,8 +1,9 @@
 """Composition roots. Concrete infrastructure is built once per process and injected; nothing
 else constructs clients. The API process needs no browser or LLM; workers get both."""
 
+import time
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import httpx
 from redis.asyncio import Redis
@@ -148,6 +149,7 @@ class WorkerContainer:
     credentials: CredentialStore
     browser: BrowserManager
     runtime: AgentRuntime
+    browsers: dict[uuid.UUID, tuple[RunBrowser, float]] = field(default_factory=dict)
 
     @property
     def settings(self) -> Settings:
@@ -188,12 +190,32 @@ class WorkerContainer:
         await self.browser.start()
 
     async def close(self) -> None:
+        for browser, _ in self.browsers.values():
+            await browser.close()
         await self.browser.stop()
         await self.http.aclose()
         await self.shared.close()
 
-    def run_browser(self) -> RunBrowser:
+    def run_browser(self, run_id: uuid.UUID) -> RunBrowser:
+        """Reuse the run's browser if it paused recently on this worker, else start fresh."""
+        cached = self.browsers.pop(run_id, None)
+        if cached is not None:
+            return cached[0]
         return RunBrowser(self.browser, self.context_loader.load().allowed_hosts)
+
+    async def release_browser(self, run_id: uuid.UUID, browser: RunBrowser, keep: bool) -> None:
+        if keep:
+            self.browsers[run_id] = (browser, time.monotonic())
+        else:
+            await browser.close()
+        await self._close_idle_browsers()
+
+    async def _close_idle_browsers(self) -> None:
+        cutoff = time.monotonic() - self.settings.browser.session_idle_seconds
+        for run_id, (browser, parked_at) in list(self.browsers.items()):
+            if parked_at < cutoff:
+                del self.browsers[run_id]
+                await browser.close()
 
     def tool_context(self, run_id: uuid.UUID, browser: RunBrowser) -> ToolContext:
         resilience = self.settings.resilience

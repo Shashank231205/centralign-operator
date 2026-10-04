@@ -1,8 +1,8 @@
-"""Per-run limits: steps, replans, LLM tokens and wall-clock time."""
+"""Per-run limits: steps, replans, LLM tokens and active working time."""
 
 from app.core.config import AgentSettings
 from app.core.errors import BudgetExceededError
-from app.domain.models import RunState, utcnow
+from app.domain.models import RunState
 from app.llm.base import Completion
 
 
@@ -25,12 +25,11 @@ class BudgetGuard:
 
     def check(self, state: RunState) -> None:
         counters = state.counters
-        elapsed = (utcnow() - state.started_at).total_seconds()
         limits = {
             "steps": (counters.steps, self._settings.max_steps),
             "replans": (counters.replans, self._settings.max_replans),
             "llm_tokens": (counters.tokens, self._settings.max_llm_tokens),
-            "duration_seconds": (int(elapsed), self._settings.max_duration_seconds),
+            "duration_seconds": (int(counters.active_seconds), self._settings.max_duration_seconds),
         }
         for name, (used, limit) in limits.items():
             if used > limit:

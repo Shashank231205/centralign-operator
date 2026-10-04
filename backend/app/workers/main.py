@@ -59,7 +59,7 @@ async def _advance(container: WorkerContainer, run_id: uuid.UUID) -> str:
         state = await RunRepository(session).get_state(run_id)
     if state is None or state.status.is_terminal or state.status.is_paused:
         return state.status if state else "missing"
-    browser = container.run_browser()
+    browser = container.run_browser(run_id)
     try:
         await container.runtime.advance(
             state, container.tool_context(run_id, browser), container.shared.recorder
@@ -69,7 +69,7 @@ async def _advance(container: WorkerContainer, run_id: uuid.UUID) -> str:
         logger.warning("llm unavailable; deferring run", extra={"error": exc.message})
         raise Retry(defer=_settings.agent.llm_unavailable_retry_seconds) from exc
     finally:
-        await browser.close()
+        await container.release_browser(run_id, browser, keep=state.status.is_paused)
     return state.status
 
 
