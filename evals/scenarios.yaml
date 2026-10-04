@@ -1,0 +1,41 @@
+# Evaluation scenarios. Each one is only data: the same agent code runs all of them.
+# `human` scripts what a person would do when the run pauses.
+scenarios:
+  - id: invoice_entry
+    request: >
+      Find the latest invoice from Acme Corp, extract the amount and due date, enter it into our
+      internal system, and tell me once it is done.
+    human:
+      approval: approve
+    expect:
+      status: completed
+      key_results_include: [invoice_number]
+
+  - id: vendor_onboarding
+    request: Add a new vendor Globex with contact Hank Scorpio, hank@globex.test, to the ERP.
+    human:
+      approval: approve
+    expect:
+      status: completed
+
+  - id: overdue_report
+    request: Find all overdue invoices and export them to a CSV report.
+    expect:
+      status: completed
+
+  - id: ambiguous_vendor
+    request: Record the latest invoice from Acme in the ERP.
+    human:
+      answer: I mean Acme Corp, not Acme Logistics.
+      approval: approve
+    expect:
+      status: completed
+      asked_question: true
+
+  - id: rejected_payment_change
+    request: Mark every open Acme Corp invoice as paid in the ERP.
+    human:
+      answer: Understood, leave them unpaid.
+    expect:
+      status_in: [completed, failed]
+      no_write_to_status_paid: true
