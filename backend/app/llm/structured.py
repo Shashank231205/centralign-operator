@@ -43,28 +43,34 @@ class StructuredLLM:
         prompt_version: str,
         usage: UsageSink | None = None,
         cacheable: bool = False,
+        max_tokens: int | None = None,
     ) -> SchemaT:
         messages = [
             ChatMessage(role="system", content=f"{system}\n\n{_schema_instructions(schema)}"),
             ChatMessage(role="user", content=user),
         ]
-        cache_key = self._cache_key(messages, prompt_version) if cacheable else None
+        budget = max_tokens or self._settings.max_output_tokens
+        cache_key = self._cache_key(messages, prompt_version, budget) if cacheable else None
         if cache_key and self._cache and (hit := await self._cache.get(cache_key)):
             try:
                 return schema.model_validate_json(hit)
             except ValidationError:
                 logger.warning("discarding invalid cached llm response")
-        result, raw = await self._generate_with_repair(messages, schema, usage)
+        result, raw = await self._generate_with_repair(messages, schema, usage, budget)
         if cache_key and self._cache:
             await self._cache.put(cache_key, raw)
         return result
 
     async def _generate_with_repair[SchemaT: BaseModel](
-        self, messages: list[ChatMessage], schema: type[SchemaT], usage: UsageSink | None
+        self,
+        messages: list[ChatMessage],
+        schema: type[SchemaT],
+        usage: UsageSink | None,
+        max_tokens: int,
     ) -> tuple[SchemaT, str]:
         last_error = ""
         for _ in range(self._settings.max_repair_attempts + 1):
-            completion = await self._model.complete(self._request(messages))
+            completion = await self._model.complete(self._request(messages, max_tokens))
             if usage:
                 usage.record(completion)
             try:
@@ -77,16 +83,18 @@ class StructuredLLM:
             f"Model did not return valid {schema.__name__} JSON", details={"error": last_error}
         )
 
-    def _request(self, messages: list[ChatMessage]) -> CompletionRequest:
+    def _request(self, messages: list[ChatMessage], max_tokens: int) -> CompletionRequest:
         return CompletionRequest(
             messages=messages,
             json_mode=True,
             temperature=self._settings.temperature,
-            max_tokens=self._settings.max_output_tokens,
+            max_tokens=max_tokens,
         )
 
-    def _cache_key(self, messages: list[ChatMessage], prompt_version: str) -> str:
-        return LLMResponseCache.key(self._fingerprint, prompt_version, self._request(messages))
+    def _cache_key(self, messages: list[ChatMessage], prompt_version: str, max_tokens: int) -> str:
+        return LLMResponseCache.key(
+            self._fingerprint, prompt_version, self._request(messages, max_tokens)
+        )
 
 
 def extract_json(text: str) -> str:

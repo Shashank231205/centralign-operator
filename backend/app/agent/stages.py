@@ -56,6 +56,7 @@ class Stages:
             prompt_version=prompt.version,
             usage=usage,
             cacheable=True,
+            max_tokens=self._settings.understand_max_tokens,
         )
 
     async def plan(
@@ -87,6 +88,7 @@ class Stages:
             prompt_version=prompt.version,
             usage=usage,
             cacheable=state.replan_reason is None,
+            max_tokens=self._settings.plan_max_tokens,
         )
         plan.version = (state.plan.version + 1) if state.plan else 1
         return plan
@@ -118,6 +120,7 @@ class Stages:
             schema=NextAction,
             prompt_version=prompt.version,
             usage=usage,
+            max_tokens=self._settings.decide_max_tokens,
         )
 
     async def report(self, state: RunState, company: CompanyContext, usage: UsageSink) -> Report:
@@ -138,4 +141,5 @@ class Stages:
             schema=Report,
             prompt_version=prompt.version,
             usage=usage,
+            max_tokens=self._settings.report_max_tokens,
         )

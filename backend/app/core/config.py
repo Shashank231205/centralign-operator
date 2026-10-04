@@ -109,10 +109,15 @@ class AgentSettings(BaseModel):
     history_window: int = 6
     max_identical_actions: int = 3
     max_consecutive_failures: int = 4
-    observation_char_budget: int = 6_000
+    observation_char_budget: int = 4_000
     context_top_k: int = 3
     memory_top_k: int = 5
     checkpoint_history_limit: int = 30
+    # Output reservations per stage: a decision is a small JSON object, a plan is larger.
+    understand_max_tokens: int = 1024
+    plan_max_tokens: int = 2048
+    decide_max_tokens: int = 1024
+    report_max_tokens: int = 1024
     llm_unavailable_retry_seconds: int = 30
     worker_grace_seconds: int = 60
     worker_max_tries: int = 5
