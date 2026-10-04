@@ -29,6 +29,9 @@ class ApiSettings(BaseModel):
     cors_origins: list[str]
     bootstrap_api_key: SecretStr
     requests_per_minute: int = 120
+    burst: int = 20
+    key_cache_ttl_seconds: int = 300
+    sse_ping_seconds: int = 15
     idempotency_ttl_seconds: int = 86_400
     page_size_default: int = 20
     page_size_max: int = 100
