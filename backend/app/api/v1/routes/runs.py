@@ -18,7 +18,6 @@ from app.api.v1.schemas.runs import (
     decode_cursor,
     encode_cursor,
 )
-from app.core.config import API_PREFIX
 from app.core.errors import AppError
 
 router = APIRouter(prefix="/runs", tags=["runs"])
@@ -86,7 +85,8 @@ async def stream_events(
 async def list_evidence(
     run_id: uuid.UUID, container: ContainerDep, _: ApiKeyDep
 ) -> list[EvidenceView]:
-    base = f"{API_PREFIX}/runs/{run_id}/evidence"
+    # Relative to the API prefix so clients and proxies can mount the API anywhere.
+    base = f"/runs/{run_id}/evidence"
     return [EvidenceView.from_row(row, base) for row in await container.runs.evidence(run_id)]
 
 
