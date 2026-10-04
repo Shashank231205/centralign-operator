@@ -42,6 +42,8 @@ class DatabaseSettings(BaseModel):
     pool_size: int = 10
     max_overflow: int = 5
     pool_timeout_seconds: float = 10.0
+    # Fail fast when Postgres is unreachable instead of hanging on the TCP connect.
+    connect_timeout_seconds: float = 5.0
     echo: bool = False
 
 

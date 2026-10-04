@@ -17,6 +17,10 @@ def _url() -> str:
     return get_settings().database.url.get_secret_value()
 
 
+def _connect_args() -> dict[str, float]:
+    return {"timeout": get_settings().database.connect_timeout_seconds}
+
+
 def run_offline() -> None:
     context.configure(url=_url(), target_metadata=target_metadata, literal_binds=True)
     with context.begin_transaction():
@@ -30,7 +34,7 @@ def _run_sync(connection: object) -> None:
 
 
 async def run_online() -> None:
-    engine = create_async_engine(_url())
+    engine = create_async_engine(_url(), connect_args=_connect_args())
     async with engine.connect() as connection:
         await connection.run_sync(_run_sync)
     await engine.dispose()
