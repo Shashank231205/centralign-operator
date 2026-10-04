@@ -28,10 +28,10 @@ _STANDARD_ATTRS = frozenset(
 
 def redact(text: str) -> str:
     """Mask anything that looks like a credential before it reaches a log sink."""
-    text = _SECRET_FIELD.sub(rf"\1{_REDACTED}", text)
+    # Bare tokens first: "Authorization: Bearer x" must lose the token, not just the scheme.
     for pattern in _BARE_SECRETS:
         text = pattern.sub(_REDACTED, text)
-    return text
+    return _SECRET_FIELD.sub(rf"\1{_REDACTED}", text)
 
 
 class JsonFormatter(logging.Formatter):
