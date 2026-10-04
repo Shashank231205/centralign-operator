@@ -71,7 +71,7 @@ class Stages:
         prompt = self._prompts.render(
             "plan",
             **sections.base_variables(company),
-            goal=state.goal.model_dump_json(indent=1),
+            goal=state.goal.model_dump_json(),
             procedures=sections.procedures(procedures),
             systems=sections.systems(company),
             tools=self._registry.catalogue,
@@ -100,7 +100,7 @@ class Stages:
         prompt = self._prompts.render(
             "act",
             **sections.base_variables(company),
-            goal=state.goal.model_dump_json(indent=1),
+            goal=state.goal.model_dump_json(),
             plan=sections.plan(state.plan),
             criteria=sections.criteria(state.plan.success_criteria),
             required_facts=sections.required_facts(state),
@@ -129,7 +129,7 @@ class Stages:
             **sections.base_variables(company),
             request=state.request,
             status=state.status.value,
-            goal=state.goal.model_dump_json(indent=1) if state.goal else sections.NONE,
+            goal=state.goal.model_dump_json() if state.goal else sections.NONE,
             facts=sections.facts(state.facts),
             verification=sections.verification(state.verification),
             history=sections.history(state.history, len(state.history)),

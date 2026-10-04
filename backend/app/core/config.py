@@ -137,7 +137,7 @@ class BrowserSettings(BaseModel):
     max_snapshot_elements: int = 120
     # Late-rendering pages: poll until the interactive element count stops changing.
     settle_timeout_seconds: float = 6.0
-    settle_interval_ms: int = 400
+    settle_interval_ms: int = 250
     # Keep a paused run's browser (signed-in pages) on its worker for quick human replies.
     session_idle_seconds: int = 900
 

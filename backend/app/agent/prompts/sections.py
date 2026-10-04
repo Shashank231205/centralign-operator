@@ -58,7 +58,7 @@ def bullet(items: list[str]) -> str:
 
 
 def facts(values: dict[str, str]) -> str:
-    return json.dumps(values, indent=1) if values else NONE
+    return json.dumps(values, separators=(",", ":")) if values else NONE
 
 
 def plan(current: Plan | None) -> str:

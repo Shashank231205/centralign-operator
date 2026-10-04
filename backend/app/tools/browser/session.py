@@ -27,7 +27,7 @@ from app.tools.browser.snapshot import SNAPSHOT_SCRIPT, PageSnapshot
 logger = logging.getLogger(__name__)
 
 _LOCAL_SCHEMES = ("about", "data", "blob")
-_SETTLE_STABLE_POLLS = 2
+_SETTLE_STABLE_POLLS = 1
 
 
 class BrowserSession:

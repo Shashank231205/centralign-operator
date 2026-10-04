@@ -63,7 +63,9 @@ class PageSnapshot(BaseModel):
             lines.append(f"TABLE {table.label!r}:")
             lines += ["  " + " | ".join(row) for row in table.rows]
         text = "\n".join(lines)
-        if len(text) < budget:
+        # Tables and form fields already carry the content; raw page text would repeat it.
+        has_structure = bool(self.tables) or any(element.form >= 0 for element in self.elements)
+        if not has_structure and len(text) < budget:
             text += f"\nPAGE TEXT: {self.text[: budget - len(text)]}"
         return text[:budget]
 
