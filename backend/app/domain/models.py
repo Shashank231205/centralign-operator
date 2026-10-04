@@ -175,6 +175,9 @@ class PendingApproval(BaseModel):
     assessment: Assessment
     rule_ids: list[str]
     reason: str
+    evidence: list[ArtifactRef] = Field(
+        default_factory=list, description="What the operator saw just before asking"
+    )
 
 
 class ApprovalResolution(BaseModel):

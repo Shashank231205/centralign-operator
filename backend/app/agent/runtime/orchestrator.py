@@ -263,6 +263,7 @@ class RunSession:
             assessment=assessment,
             rule_ids=rule_ids,
             reason=reason,
+            evidence=self.state.history[-1].observation.artifacts if self.state.history else [],
         )
         self.state.pending_approval = pending
         await self._recorder.open_approval(self.state, pending)
