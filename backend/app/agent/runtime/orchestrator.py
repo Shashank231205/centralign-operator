@@ -243,8 +243,13 @@ class RunSession:
             )
             return False
         if decision.verdict is Verdict.REQUIRE_APPROVAL:
+            formats = self._rt.settings.date_formats
             grant = next(
-                (g for g in self.state.grants if g.covers(assessment.system, assessment.payload)),
+                (
+                    g
+                    for g in self.state.grants
+                    if g.covers(assessment.system, assessment.payload, formats)
+                ),
                 None,
             )
             if grant is None:

@@ -14,6 +14,7 @@ from app.domain.enums import (
     RunStatus,
     StepStatus,
 )
+from app.domain.values import values_match
 
 
 def utcnow() -> datetime:
@@ -199,11 +200,12 @@ class ApprovalGrant(BaseModel):
     system: str | None
     payload: dict[str, str]
 
-    def covers(self, system: str | None, payload: dict[str, Any]) -> bool:
+    def covers(self, system: str | None, payload: dict[str, Any], date_formats: list[str]) -> bool:
+        """Same system and the same data; formats may differ ("2026-10-28" == "28/10/2026")."""
         if system != self.system:
             return False
         return all(
-            str(payload.get(key, "")).strip().lower() == value.strip().lower()
+            key in payload and values_match(value, payload[key], date_formats)
             for key, value in self.payload.items()
         )
 

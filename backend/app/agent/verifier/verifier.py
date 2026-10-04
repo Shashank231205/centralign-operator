@@ -11,11 +11,11 @@ import csv
 import io
 from typing import Any
 
-from app.agent.verifier.values import MissingFactError, resolve, values_match
 from app.core.config import AgentSettings
 from app.core.resilience import RetryPolicy
 from app.domain.enums import FailureKind
 from app.domain.models import CriterionResult, FileCheck, HttpJsonCheck, SuccessCriterion
+from app.domain.values import MissingFactError, resolve, values_match
 from app.tools.base import ToolContext
 from app.tools.http.tool import HttpArgs, HttpRequest
 

@@ -8,8 +8,8 @@ import json
 from datetime import date
 
 from app.agent.understanding.context import CompanyContext, Procedure
-from app.agent.verifier.values import referenced_facts
 from app.domain.models import CriterionResult, Plan, RunState, StepRecord, SuccessCriterion
+from app.domain.values import referenced_facts
 
 NONE = "(none)"
 _HISTORY_LINE_CHARS = 220

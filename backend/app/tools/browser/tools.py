@@ -222,10 +222,14 @@ class FieldValue(BaseModel):
     secret: str | None = Field(default=None, description="Credential reference instead of a value")
 
     @model_validator(mode="after")
-    def _exactly_one(self) -> "FieldValue":
-        if (self.value is None) == (self.secret is None):
-            raise ValueError("Each field needs exactly one of 'value' or 'secret'")
+    def _not_both(self) -> "FieldValue":
+        if self.value is not None and self.secret is not None:
+            raise ValueError("A field takes 'value' or 'secret', not both")
         return self
+
+    @property
+    def is_empty(self) -> bool:
+        return self.value is None and self.secret is None
 
 
 class FillFormArgs(BaseModel):
@@ -243,7 +247,9 @@ class BrowserFillForm(BrowserTool[FillFormArgs]):
     async def act(self, args: FillFormArgs, ctx: ToolContext) -> Observation:
         session = await _session_for(ctx)
         snapshot = session.last_snapshot
-        for field in args.fields:
+        # Entries with nothing to set are skipped (and reported) instead of failing the batch.
+        skipped = [field.ref for field in args.fields if field.is_empty]
+        for field in (item for item in args.fields if not item.is_empty):
             locator = await session.require(field.ref)
             text = ctx.credentials.resolve(field.secret) if field.secret else (field.value or "")
             element = snapshot.element(field.ref) if snapshot else None
@@ -254,7 +260,10 @@ class BrowserFillForm(BrowserTool[FillFormArgs]):
                     raise ToolInputError(f"Option {text!r} not found in {field.ref}") from exc
             else:
                 await locator.fill(text)
-        return await observe(session, ctx, "fill_form", screenshot=False)
+        observation = await observe(session, ctx, "fill_form", screenshot=False)
+        if skipped:
+            observation.summary = f"Skipped fields with no value: {skipped}\n{observation.summary}"
+        return observation
 
 
 class BrowserDownload(BrowserTool[RefArgs]):

@@ -1,13 +1,13 @@
 import pytest
 
-from app.agent.verifier.values import (
+from app.core.config import AgentSettings
+from app.domain.values import (
     MissingFactError,
     parse_amount,
     referenced_facts,
     resolve,
     values_match,
 )
-from app.core.config import AgentSettings
 
 FORMATS = AgentSettings().date_formats
 
