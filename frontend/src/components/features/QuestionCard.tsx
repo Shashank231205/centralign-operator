@@ -3,8 +3,9 @@
 import { useState } from "react";
 
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { Callout } from "@/components/ui/Callout";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { TextArea } from "@/components/ui/TextArea";
 
 interface QuestionCardProps {
   question: string;
@@ -30,20 +31,26 @@ export function QuestionCard({ question, onAnswer }: QuestionCardProps) {
   }
 
   return (
-    <Card title="The operator needs your input" tone="attention">
-      <p className="text-sm text-slate-800">{question}</p>
-      <textarea
+    <Callout label="The operator has a question">
+      <p className="font-serif text-lead leading-snug">{question}</p>
+      <TextArea
         aria-label="Answer"
-        className="mt-2 h-20 w-full rounded border border-slate-300 p-2 text-sm"
+        rows={3}
+        className="mt-4"
+        placeholder="Your answer"
         value={answer}
         onChange={(event) => setAnswer(event.target.value)}
       />
-      {error && <ErrorState message={error} />}
-      <div className="mt-2 flex justify-end">
+      {error && (
+        <div className="mt-3">
+          <ErrorState message={error} />
+        </div>
+      )}
+      <div className="mt-4">
         <Button disabled={busy || !answer.trim()} onClick={() => void submit()}>
           Send answer
         </Button>
       </div>
-    </Card>
+    </Callout>
   );
 }

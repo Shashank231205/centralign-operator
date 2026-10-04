@@ -3,8 +3,8 @@
 import { useState } from "react";
 
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { TextArea } from "@/components/ui/TextArea";
 import { EXAMPLE_REQUESTS } from "@/lib/examples";
 
 interface TaskInputProps {
@@ -29,36 +29,48 @@ export function TaskInput({ onSubmit }: TaskInputProps) {
   }
 
   return (
-    <Card title="What should the operator do?">
-      <textarea
+    <div>
+      <h1 className="font-serif text-display leading-[1.05] tracking-tight">What needs doing?</h1>
+      <p className="mt-3 max-w-xl text-lead text-muted">
+        Describe the outcome. The operator works out the steps from company procedures, does the
+        work in your systems, and verifies it before reporting back.
+      </p>
+      <TextArea
         aria-label="Request"
-        className="h-28 w-full rounded-md border border-slate-300 p-2 text-sm"
-        placeholder="Describe the outcome you need, in plain language."
+        rows={4}
+        className="mt-10"
+        placeholder="e.g. Record the latest Acme Corp invoice in the ERP"
         value={text}
         onChange={(event) => setText(event.target.value)}
       />
-      <div className="mt-2 flex flex-wrap gap-2">
-        {EXAMPLE_REQUESTS.map((example) => (
-          <button
-            key={example}
-            type="button"
-            className="rounded-full border border-slate-200 px-3 py-1 text-left text-xs text-slate-600 hover:bg-slate-50"
-            onClick={() => setText(example)}
-          >
-            {example}
-          </button>
-        ))}
+      <div className="mt-4 flex items-center justify-between gap-4">
+        <span className="font-mono text-label text-faint">{text.trim().length} characters</span>
+        <Button disabled={submitting || text.trim().length < 3} onClick={() => void submit()}>
+          {submitting ? "Submitting" : "Start"}
+        </Button>
       </div>
       {error && (
-        <div className="mt-3">
+        <div className="mt-4">
           <ErrorState message={error} />
         </div>
       )}
-      <div className="mt-3 flex justify-end">
-        <Button disabled={submitting || text.trim().length < 3} onClick={() => void submit()}>
-          {submitting ? "Submitting…" : "Run"}
-        </Button>
-      </div>
-    </Card>
+      <h2 className="mt-14 font-mono text-label uppercase tracking-[0.14em] text-muted">
+        Examples
+      </h2>
+      <ol className="mt-2">
+        {EXAMPLE_REQUESTS.map((example, index) => (
+          <li key={example} className="border-b border-rule">
+            <button
+              type="button"
+              className="grid w-full grid-cols-[2rem_1fr] py-3 text-left text-ink transition-colors duration-100 hover:text-accent"
+              onClick={() => setText(example)}
+            >
+              <span className="font-mono text-label text-faint">0{index + 1}</span>
+              <span>{example}</span>
+            </button>
+          </li>
+        ))}
+      </ol>
+    </div>
   );
 }

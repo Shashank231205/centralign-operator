@@ -1,35 +1,58 @@
-import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { KeyValueTable } from "@/components/ui/KeyValueTable";
+import { Section } from "@/components/ui/Section";
 import type { RunDetail } from "@/types/api";
 
 export function VerificationReport({ run }: { run: RunDetail }) {
   return (
-    <Card title="Outcome">
-      {run.summary && <p className="mb-3 text-sm text-slate-800">{run.summary}</p>}
-      {run.failure_reason && (
-        <p className="mb-3 text-sm text-red-700">Failed: {run.failure_reason}</p>
+    <Section label="Outcome">
+      {run.summary && (
+        <p className="max-w-prose font-serif text-lead leading-snug">{run.summary}</p>
       )}
-      <h3 className="text-xs font-semibold text-slate-600">Independent verification</h3>
+      {run.failure_reason && <p className="mt-2 text-negative">{run.failure_reason}</p>}
+
+      <h3 className="mt-8 font-mono text-label uppercase tracking-[0.14em] text-muted">
+        Independent verification
+      </h3>
       {run.verification.length === 0 ? (
-        <EmptyState message="Not verified yet." />
+        <div className="mt-2">
+          <EmptyState message="Checked against the system of record once the work is done." />
+        </div>
       ) : (
-        <ul className="mb-3 space-y-1">
+        <ul className="mt-2">
           {run.verification.map((result) => (
-            <li key={result.criterion_id} className="text-sm">
-              <span className={result.passed ? "text-green-700" : "text-red-700"}>
-                {result.passed ? "✓ PASS" : "✕ FAIL"}
-              </span>{" "}
-              {result.description}
-              <div className="pl-12 text-xs text-slate-500">{result.detail}</div>
+            <li
+              key={result.criterion_id}
+              className="grid grid-cols-[3.5rem_1fr] gap-3 border-b border-rule py-2 last:border-0"
+            >
+              <span
+                className={`font-mono text-label uppercase leading-6 ${result.passed ? "text-positive" : "text-negative"}`}
+              >
+                {result.passed ? "Pass" : "Fail"}
+              </span>
+              <div>
+                <p>{result.description}</p>
+                <p className="font-mono text-label text-faint">{result.detail}</p>
+              </div>
             </li>
           ))}
         </ul>
       )}
-      <h3 className="mt-2 text-xs font-semibold text-slate-600">Key results</h3>
-      <KeyValueTable values={run.key_results} emptyMessage="No results yet." />
-      <h3 className="mt-3 text-xs font-semibold text-slate-600">Facts discovered</h3>
-      <KeyValueTable values={run.facts} emptyMessage="No facts recorded yet." />
-    </Card>
+
+      <div className="mt-8 grid gap-8 xl:grid-cols-2">
+        <div>
+          <h3 className="mb-2 font-mono text-label uppercase tracking-[0.14em] text-muted">
+            Key results
+          </h3>
+          <KeyValueTable values={run.key_results} emptyMessage="None yet." />
+        </div>
+        <div>
+          <h3 className="mb-2 font-mono text-label uppercase tracking-[0.14em] text-muted">
+            Facts discovered
+          </h3>
+          <KeyValueTable values={run.facts} emptyMessage="None yet." />
+        </div>
+      </div>
+    </Section>
   );
 }

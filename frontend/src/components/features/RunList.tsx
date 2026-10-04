@@ -1,10 +1,10 @@
 import Link from "next/link";
 
-import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Loading } from "@/components/ui/Loading";
-import { StatusBadge } from "@/components/ui/StatusBadge";
+import { Section } from "@/components/ui/Section";
+import { StatusText } from "@/components/ui/StatusText";
 import type { RunListItem } from "@/types/api";
 
 interface RunListProps {
@@ -16,20 +16,28 @@ interface RunListProps {
 
 export function RunList({ runs, loading, error, onRetry }: RunListProps) {
   return (
-    <Card title="Recent runs">
+    <Section label="Recent runs">
       {loading && <Loading />}
       {error && <ErrorState message={error} onRetry={onRetry} />}
-      {!loading && !error && runs.length === 0 && <EmptyState message="No runs yet." />}
-      <ul className="divide-y divide-slate-100">
+      {!loading && !error && runs.length === 0 && <EmptyState message="Nothing run yet." />}
+      <ul>
         {runs.map((run) => (
-          <li key={run.id} className="py-2">
-            <Link href={`/runs/${run.id}`} className="flex items-start justify-between gap-3">
-              <span className="text-sm text-slate-800">{run.request}</span>
-              <StatusBadge status={run.status} />
+          <li key={run.id} className="border-b border-rule last:border-0">
+            <Link
+              href={`/runs/${run.id}`}
+              className="block py-3 transition-colors duration-100 hover:text-accent"
+            >
+              <span className="line-clamp-2">{run.request}</span>
+              <span className="mt-1 flex items-baseline justify-between gap-3">
+                <StatusText status={run.status} />
+                <time className="font-mono text-label text-faint" dateTime={run.created_at}>
+                  {new Date(run.created_at).toLocaleString()}
+                </time>
+              </span>
             </Link>
           </li>
         ))}
       </ul>
-    </Card>
+    </Section>
   );
 }

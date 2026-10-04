@@ -1,7 +1,7 @@
-export function Loading({ label = "Loading…" }: { label?: string }) {
+export function Loading({ label = "Loading" }: { label?: string }) {
   return (
-    <p role="status" className="animate-pulse text-sm text-slate-500">
+    <output className="block font-mono text-label uppercase tracking-[0.14em] text-muted">
       {label}
-    </p>
+    </output>
   );
 }

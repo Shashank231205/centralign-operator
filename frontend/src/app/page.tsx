@@ -18,9 +18,13 @@ export default function HomePage() {
   }
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
-      <TaskInput onSubmit={submit} />
-      <RunList runs={runs} loading={loading} error={error} onRetry={() => void reload()} />
+    <div className="grid gap-16 lg:grid-cols-12">
+      <div className="lg:col-span-7">
+        <TaskInput onSubmit={submit} />
+      </div>
+      <aside className="lg:col-span-4 lg:col-start-9">
+        <RunList runs={runs} loading={loading} error={error} onRetry={() => void reload()} />
+      </aside>
     </div>
   );
 }

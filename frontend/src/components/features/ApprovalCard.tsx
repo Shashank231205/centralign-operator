@@ -3,8 +3,9 @@
 import { useState } from "react";
 
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { Callout } from "@/components/ui/Callout";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { TextArea } from "@/components/ui/TextArea";
 import type { ApprovalDecision, PendingApproval } from "@/types/api";
 
 // Bookkeeping fields the policy engine adds; not editable business data.
@@ -21,20 +22,19 @@ interface ApprovalCardProps {
 }
 
 export function ApprovalCard({ approval, onResolve }: ApprovalCardProps) {
-  const fields = Object.entries(approval.assessment.payload).filter(
-    ([key]) => !key.startsWith(HIDDEN_FIELD_PREFIX) && !key.endsWith(LABEL_SUFFIX),
+  const payload = approval.assessment.payload;
+  const fields = Object.keys(payload).filter(
+    (key) => !key.startsWith(HIDDEN_FIELD_PREFIX) && !key.endsWith(LABEL_SUFFIX),
   );
   const [values, setValues] = useState<Record<string, string>>(
-    Object.fromEntries(fields.map(([key, value]) => [key, String(value)])),
+    Object.fromEntries(fields.map((key) => [key, String(payload[key] ?? "")])),
   );
   const [comment, setComment] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const edits = Object.fromEntries(
-    Object.entries(values).filter(
-      ([key, value]) => String(approval.assessment.payload[key]) !== value,
-    ),
+    Object.entries(values).filter(([key, value]) => String(payload[key] ?? "") !== value),
   );
   const edited = Object.keys(edits).length > 0;
 
@@ -51,48 +51,57 @@ export function ApprovalCard({ approval, onResolve }: ApprovalCardProps) {
   }
 
   return (
-    <Card title="Approval required" tone="attention">
-      <p className="text-sm text-slate-800">{approval.reason}</p>
-      <p className="mt-1 text-xs text-slate-600">
-        {approval.assessment.description} · system: {approval.assessment.system ?? "unknown"} ·
-        risk: {approval.assessment.risk}
+    <Callout label="Approval required">
+      <p className="font-serif text-lead leading-snug">{approval.reason}</p>
+      <p className="mt-2 text-muted">{approval.action.rationale}</p>
+      <p className="mt-1 font-mono text-label text-faint">
+        {approval.assessment.description} · {approval.assessment.system ?? "unknown system"} ·{" "}
+        {approval.assessment.risk}
       </p>
-      <p className="mt-1 text-xs text-slate-600">Why: {approval.action.rationale}</p>
-      <h3 className="mt-3 text-xs font-semibold text-slate-700">Data to be written</h3>
-      <div className="mt-1 grid grid-cols-1 gap-2 sm:grid-cols-2">
-        {fields.map(([key]) => (
-          <label key={key} className="text-xs text-slate-600">
-            {key}
-            <input
-              className="mt-0.5 w-full rounded border border-slate-300 bg-white p-1 font-mono text-sm text-slate-900"
-              value={values[key] ?? ""}
-              onChange={(event) => setValues({ ...values, [key]: event.target.value })}
-            />
-          </label>
-        ))}
+
+      <div className="mt-6 grid gap-x-8 gap-y-4 sm:grid-cols-2">
+        {fields.map((key) => {
+          const changed = values[key] !== String(payload[key] ?? "");
+          return (
+            <label key={key} className="block">
+              <span className="font-mono text-label uppercase tracking-[0.14em] text-muted">
+                {key.replaceAll("_", " ")}
+                {changed && <span className="ml-2 text-accent">edited</span>}
+              </span>
+              <input
+                className="mt-1 w-full border-0 border-b border-rule bg-transparent py-1 font-mono text-ink focus:border-ink focus:outline-none"
+                value={values[key] ?? ""}
+                onChange={(event) => setValues({ ...values, [key]: event.target.value })}
+              />
+            </label>
+          );
+        })}
       </div>
-      <textarea
+
+      <TextArea
         aria-label="Comment"
-        className="mt-3 h-16 w-full rounded border border-slate-300 p-2 text-sm"
-        placeholder="Comment (required context for a rejection)"
+        rows={2}
+        className="mt-6"
+        placeholder="Comment for the operator (explain a rejection)"
         value={comment}
         onChange={(event) => setComment(event.target.value)}
       />
-      {error && <ErrorState message={error} />}
-      <div className="mt-2 flex flex-wrap justify-end gap-2">
+      {error && (
+        <div className="mt-3">
+          <ErrorState message={error} />
+        </div>
+      )}
+      <div className="mt-4 flex items-center gap-6">
+        <Button
+          disabled={busy}
+          onClick={() => void resolve(edited ? "approve_with_edits" : "approve")}
+        >
+          {edited ? "Approve with edits" : "Approve"}
+        </Button>
         <Button variant="danger" disabled={busy} onClick={() => void resolve("reject")}>
           Reject
         </Button>
-        {edited ? (
-          <Button disabled={busy} onClick={() => void resolve("approve_with_edits")}>
-            Approve with edits
-          </Button>
-        ) : (
-          <Button disabled={busy} onClick={() => void resolve("approve")}>
-            Approve
-          </Button>
-        )}
       </div>
-    </Card>
+    </Callout>
   );
 }

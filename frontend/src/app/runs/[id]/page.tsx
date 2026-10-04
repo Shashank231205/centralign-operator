@@ -19,7 +19,7 @@ export default function RunPage() {
   const { id } = useParams<{ id: string }>();
   const { run, events, evidence, error, loading, connected, refresh } = useRun(id);
 
-  if (loading) return <Loading label="Loading run…" />;
+  if (loading) return <Loading label="Loading run" />;
   if (!run) return <ErrorState message={error ?? "Run not found"} onRetry={() => void refresh()} />;
 
   async function resolve(
@@ -43,21 +43,25 @@ export default function RunPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-14">
       <RunHeader run={run} onCancel={cancel} />
       {error && <ErrorState message={error} onRetry={() => void refresh()} />}
       {run.status === "awaiting_approval" && run.pending_approval && (
-        <ApprovalCard approval={run.pending_approval} onResolve={resolve} />
+        <div className="lg:w-8/12">
+          <ApprovalCard approval={run.pending_approval} onResolve={resolve} />
+        </div>
       )}
       {run.status === "awaiting_input" && run.pending_question && (
-        <QuestionCard question={run.pending_question} onAnswer={answer} />
+        <div className="lg:w-8/12">
+          <QuestionCard question={run.pending_question} onAnswer={answer} />
+        </div>
       )}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="space-y-4">
+      <div className="grid gap-x-16 gap-y-14 lg:grid-cols-12">
+        <div className="space-y-14 lg:col-span-7">
           <VerificationReport run={run} />
           <PlanSteps plan={run.plan} />
         </div>
-        <div className="space-y-4">
+        <div className="space-y-14 lg:col-span-5">
           <EvidenceGallery items={evidence} />
           <EventTimeline events={events} connected={connected} />
         </div>
