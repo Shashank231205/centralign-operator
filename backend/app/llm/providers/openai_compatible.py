@@ -56,6 +56,7 @@ class OpenAICompatibleProvider:
         }
         if request.json_mode:
             payload["response_format"] = {"type": "json_object"}
+        payload.update(self._settings.extra_body)
         return payload
 
     async def _post(self, payload: dict[str, Any]) -> httpx.Response:

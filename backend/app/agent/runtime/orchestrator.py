@@ -89,7 +89,8 @@ class RunSession:
                 await self._handlers[self.state.status]()
                 await self._recorder.checkpoint(self.state)
         except (BudgetExceededError, LLMResponseInvalidError) as exc:
-            await self._fail(exc.message)
+            detail = exc.details.get("error") or exc.details.get("budget")
+            await self._fail(f"{exc.message} ({detail})" if detail else exc.message)
 
     # --- stages ------------------------------------------------------------------------
 

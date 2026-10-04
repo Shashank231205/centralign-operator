@@ -11,6 +11,7 @@ import os
 from enum import StrEnum
 from functools import lru_cache
 from pathlib import Path
+from typing import Any
 
 from dotenv import dotenv_values
 from pydantic import BaseModel, Field, SecretStr, field_validator, model_validator
@@ -64,11 +65,15 @@ class LLMBackendSettings(BaseModel):
     # Local servers (e.g. Ollama) need no key; hosted ones are skipped when the key is missing.
     requires_api_key: bool = True
     requests_per_minute: int = 30
+    # Providers that cap tokens per minute (e.g. Groq free tier): reserve before sending.
+    tokens_per_minute: int | None = None
     burst: int = 3
     max_concurrency: int = 2
     timeout_seconds: float = 60.0
     # Some local reasoning models emit a hidden chain of thought before the answer.
     strip_reasoning: bool = True
+    # Provider-specific request fields, e.g. {"reasoning_effort": "none"} for Gemini.
+    extra_body: dict[str, Any] = Field(default_factory=dict)
 
     @property
     def is_usable(self) -> bool:

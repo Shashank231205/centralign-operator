@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 # A transient error gets one quick retry on the same backend before failing over.
 _SAME_BACKEND_ATTEMPTS = 2
+_CHARS_PER_TOKEN = 4
 
 
 @dataclass(slots=True)
@@ -39,6 +40,12 @@ class BackendSlot:
     @property
     def bucket(self) -> BucketSpec:
         return BucketSpec.per_minute(self.settings.requests_per_minute, self.settings.burst)
+
+
+def estimate_tokens(request: CompletionRequest) -> int:
+    """Upper-bound token cost of a call: prompt (~4 chars per token) plus the output reserve."""
+    prompt_chars = sum(len(message.content) for message in request.messages)
+    return prompt_chars // _CHARS_PER_TOKEN + request.max_tokens
 
 
 class LLMRouter:
@@ -105,6 +112,14 @@ class LLMRouter:
     async def _call(self, slot: BackendSlot, request: CompletionRequest) -> Completion:
         slot.breaker.ensure_closed()
         await self._limiter.wait(f"llm:{slot.provider.name}", slot.bucket, self._rate_wait)
+        if slot.settings.tokens_per_minute:
+            budget = slot.settings.tokens_per_minute
+            await self._limiter.wait(
+                f"llm-tokens:{slot.provider.name}",
+                BucketSpec.per_minute(budget, burst=budget),
+                self._rate_wait,
+                cost=min(estimate_tokens(request), budget),
+            )
         async with slot.semaphore:
             try:
                 completion = await retry_async(

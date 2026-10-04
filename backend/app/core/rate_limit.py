@@ -65,11 +65,13 @@ class TokenBucketLimiter:
         )
         return RateDecision(allowed=bool(int(allowed)), retry_after_seconds=float(retry_after))
 
-    async def wait(self, key: str, spec: BucketSpec, max_wait_seconds: float) -> None:
+    async def wait(
+        self, key: str, spec: BucketSpec, max_wait_seconds: float, cost: float = 1.0
+    ) -> None:
         """Block until a token is available, or raise if that would take longer than allowed."""
         waited = 0.0
         while True:
-            decision = await self.acquire(key, spec)
+            decision = await self.acquire(key, spec, cost)
             if decision.allowed:
                 return
             if waited + decision.retry_after_seconds > max_wait_seconds:
