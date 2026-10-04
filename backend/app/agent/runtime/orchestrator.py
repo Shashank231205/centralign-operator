@@ -30,6 +30,7 @@ from app.domain.enums import EvidenceKind, FailureKind, RiskLevel, RunStatus, St
 from app.domain.events import DomainEvent, EventType
 from app.domain.models import (
     Action,
+    ApprovalGrant,
     Assessment,
     NextAction,
     Observation,
@@ -71,6 +72,7 @@ class RunSession:
         self._recorder = recorder
         self._usage = RunUsage(state)
         self._lessons: list[str] | None = None
+        self._grant_in_use: ApprovalGrant | None = None
         self._handlers: dict[RunStatus, Callable[[], Awaitable[None]]] = {
             RunStatus.PENDING: self._start,
             RunStatus.UNDERSTANDING: self._understand,
@@ -255,7 +257,8 @@ class RunSession:
             if grant is None:
                 await self._request_approval(action, assessment, decision.rule_ids, decision.reason)
                 return False
-            self.state.grants.remove(grant)
+            # Consumed only if the write succeeds; a rejected submit keeps the approval.
+            self._grant_in_use = grant
             await self._emit(
                 EventType.APPROVAL_RESOLVED,
                 "Proceeding under human approval",
@@ -309,12 +312,18 @@ class RunSession:
                 tool=action.tool,
             )
         record = await self._record(action, execution.observation, execution.attempts)
+        self._settle_grant(succeeded=execution.observation.ok)
         verdict = self._rt.observer.after_step(self.state, record)
         if verdict.signal is Signal.REPLAN:
             self.state.replan_reason = verdict.reason
             await self._transition(RunStatus.REPLANNING, verdict.reason)
         elif verdict.signal is Signal.FAIL:
             await self._fail(verdict.reason)
+
+    def _settle_grant(self, *, succeeded: bool) -> None:
+        if self._grant_in_use is not None and succeeded and self._grant_in_use in self.state.grants:
+            self.state.grants.remove(self._grant_in_use)
+        self._grant_in_use = None
 
     async def _record(self, action: Action, observation: Observation, attempts: int) -> StepRecord:
         counters = self.state.counters

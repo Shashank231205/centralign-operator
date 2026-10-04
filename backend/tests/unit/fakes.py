@@ -102,6 +102,19 @@ class FakeWrite(Tool[AmountArgs]):
         )
 
 
+class FlakyWrite(FakeWrite):
+    """Rejected by the target system once (e.g. a validation error), then accepted."""
+
+    name: ClassVar[str] = "flaky_write"
+    attempts = 0
+
+    async def run(self, args: AmountArgs, ctx: ToolContext) -> Observation:
+        FlakyWrite.attempts += 1
+        if FlakyWrite.attempts == 1:
+            return Observation(ok=False, summary="HTTP 422: bad date format", error="HTTP 422")
+        return await super().run(args, ctx)
+
+
 class ScriptedStages:
     """Replays a fixed sequence of decisions, like a recorded model."""
 

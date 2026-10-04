@@ -20,6 +20,7 @@ from tests.unit.fakes import (
     FakeRead,
     FakeVerifier,
     FakeWrite,
+    FlakyWrite,
     MemoryRecorder,
     ScriptedStages,
     decision,
@@ -34,7 +35,7 @@ async def _noop_sleep(_: float) -> None:
 
 
 def runtime(stages: ScriptedStages, verifier: FakeVerifier, memory: FakeMemory) -> AgentRuntime:
-    registry = ToolRegistry([FakeRead(), FakeWrite(), *control_tools()])
+    registry = ToolRegistry([FakeRead(), FakeWrite(), FlakyWrite(), *control_tools()])
     return AgentRuntime(
         stages=cast(Any, stages),
         executor=Executor(registry, RetryPolicy(2, 0, 0), 5.0, sleep=_noop_sleep),
@@ -50,6 +51,7 @@ def runtime(stages: ScriptedStages, verifier: FakeVerifier, memory: FakeMemory) 
 def reset_tool_counters() -> None:
     FakeRead.calls = 0
     FakeWrite.calls = 0
+    FlakyWrite.attempts = 0
 
 
 async def test_happy_path_completes_verifies_and_learns() -> None:
@@ -145,3 +147,26 @@ async def test_unknown_tool_becomes_an_observation_not_a_crash() -> None:
     assert state.status is RunStatus.COMPLETED
     assert recorder.steps[0].observation.ok is False
     assert "Unknown tool" in (recorder.steps[0].observation.error or "")
+
+
+async def test_grant_survives_a_rejected_write_and_covers_the_retry() -> None:
+    recorder = MemoryRecorder()
+    stages = ScriptedStages(
+        [
+            decision("flaky_write", amount="7450.00"),
+            decision("flaky_write", amount="7450.00"),
+            decision("flaky_write", amount="7450.00"),
+            decision("finish", summary="done"),
+        ]
+    )
+    agent = runtime(stages, FakeVerifier([True]), FakeMemory())
+    state, ctx = RunState(run_id=uuid4(), request="enter invoice"), tool_context()
+    await agent.advance(state, ctx, recorder)
+    assert state.pending_approval is not None
+    _apply(state, state.pending_approval, ApprovalResolution(decision=ApprovalDecision.APPROVE))
+    state.status = RunStatus.EXECUTING
+    await agent.advance(state, ctx, recorder)
+    assert state.status is RunStatus.COMPLETED
+    assert len(recorder.approvals) == 1
+    assert FlakyWrite.attempts == 2
+    assert state.grants == []
