@@ -11,7 +11,9 @@ EXECUTE_RUN_JOB = "execute_run"
 
 
 def arq_settings(settings: RedisSettings) -> ArqRedisSettings:
-    return ArqRedisSettings.from_dsn(settings.url.get_secret_value())
+    arq = ArqRedisSettings.from_dsn(settings.url.get_secret_value())
+    arq.conn_timeout = int(settings.connect_timeout_seconds)
+    return arq
 
 
 class RunQueue:

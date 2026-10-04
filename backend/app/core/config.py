@@ -50,6 +50,7 @@ class DatabaseSettings(BaseModel):
 class RedisSettings(BaseModel):
     url: SecretStr
     queue_name: str = "operator:runs"
+    connect_timeout_seconds: float = 5.0
     run_lock_ttl_seconds: int = 1200
     events_channel_prefix: str = "operator:run-events"
 
