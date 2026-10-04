@@ -19,7 +19,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-        container = Container.build(settings)
+        container = await Container.create(settings)
         await container.start()
         app.state.container = container
         try:

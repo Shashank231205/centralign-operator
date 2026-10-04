@@ -35,6 +35,9 @@ extend-exclude = ["frontend", "backend/migrations/versions"]
 select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "SIM", "RET", "ARG", "PTH", "ASYNC", "S", "BLE", "TRY", "RUF"]
 ignore = ["TRY003", "S101"]
 
+[tool.ruff.lint.isort]
+known-first-party = ["app", "sandbox"]
+
 [tool.ruff.lint.per-file-ignores]
 "**/tests/**" = ["S", "ARG", "PLR2004"]
 
@@ -68,9 +71,9 @@ typecheck = "mypy backend/app sandbox/sandbox"
 test = "pytest"
 test-integration = "pytest -m integration"
 test-e2e = "pytest -m e2e"
-migrate = { cmd = "alembic upgrade head", cwd = "backend" }
+migrate = "alembic -c backend/alembic.ini upgrade head"
 api = "uvicorn app.main:create_app --factory --app-dir backend --host 0.0.0.0 --port 8000"
-worker = { cmd = "arq app.workers.main.WorkerSettings", cwd = "backend" }
+worker = "arq app.workers.main.WorkerSettings"
 sandbox-portal = "uvicorn sandbox.vendor_portal.app:create_app --factory --app-dir sandbox --port 8101"
 sandbox-erp = "uvicorn sandbox.internal_erp.app:create_app --factory --app-dir sandbox --port 8102"
 seed = "python -m sandbox.seed"

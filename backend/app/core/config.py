@@ -45,7 +45,7 @@ class DatabaseSettings(BaseModel):
 class RedisSettings(BaseModel):
     url: SecretStr
     queue_name: str = "operator:runs"
-    run_lock_ttl_seconds: int = 900
+    run_lock_ttl_seconds: int = 1200
     events_channel_prefix: str = "operator:run-events"
 
 
@@ -102,6 +102,11 @@ class AgentSettings(BaseModel):
     context_top_k: int = 3
     memory_top_k: int = 5
     checkpoint_history_limit: int = 30
+    llm_unavailable_retry_seconds: int = 30
+    worker_grace_seconds: int = 60
+    worker_max_tries: int = 5
+    worker_concurrency: int = 2
+    job_result_ttl_seconds: int = 3600
     # Formats the verifier accepts when comparing dates across systems (first match wins).
     date_formats: list[str] = Field(
         default_factory=lambda: ["%Y-%m-%d", "%d/%m/%Y", "%B %d, %Y", "%d %B %Y", "%d %b %Y"]
@@ -163,6 +168,14 @@ class Settings(BaseSettings):
     resilience: ResilienceSettings = Field(default_factory=ResilienceSettings)
     # Keyed by the credential name referenced in company_context/profile.yaml.
     credentials: dict[str, SystemCredential] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def _lock_outlives_run(self) -> "Settings":
+        # A run lock that expires mid-run would let a second worker pick the run up.
+        minimum = self.agent.max_duration_seconds + self.agent.worker_grace_seconds
+        if self.redis.run_lock_ttl_seconds < minimum:
+            raise ValueError(f"REDIS__RUN_LOCK_TTL_SECONDS must be >= {minimum}")
+        return self
 
     @field_validator("log_level")
     @classmethod

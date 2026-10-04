@@ -7,6 +7,7 @@ and the next one serves the call. Free tiers hit 429s often, so this is the norm
 
 import asyncio
 import logging
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from app.core.config import LLMBackendSettings, LLMSettings, ResilienceSettings
@@ -61,7 +62,7 @@ class LLMRouter:
     @classmethod
     def build(
         cls,
-        providers: dict[str, LLMProvider],
+        providers: Mapping[str, LLMProvider],
         llm_settings: LLMSettings,
         resilience: ResilienceSettings,
         limiter: TokenBucketLimiter,
